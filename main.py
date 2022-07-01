@@ -33,7 +33,9 @@ async def check_status():
         LAST_UPDATE = time.time()
     elif time.time() - LAST_TIMER_UPDATE > config['refresh_interval']:
         await update_timer(config, TIMER_MESSAGE)
+        await update_channel_permissions(bot.get_channel(config['channel_id']))
         LAST_TIMER_UPDATE = time.time()
+        
 
 
 
@@ -77,6 +79,27 @@ async def update_timer(config, message):
     except Exception as e:
         logging.error(e)
         pass
+
+async def update_channel_permissions(channel: discord.TextChannel):
+    for role in channel.guild.roles:
+        if channel.overwrites.get(role):
+            overwrite = channel.overwrites[role]
+        else:
+            overwrite = discord.PermissionOverwrite()
+        if role.is_default():
+            # This is the everyone role
+            if overwrite.view_channel:
+                continue
+            elif overwrite.view_channel is None or overwrite.view_channel is False:
+                await channel.set_permissions(role, view_channel=True, reason="Everyone must be able to see this channel.")
+        else:
+            # This is a regular role
+            if overwrite.view_channel or overwrite.view_channel is None:
+                await channel.set_permissions(role, view_channel=False, reason="This role must not be able to see this channel.")
+            elif overwrite.view_channel is False:
+                continue
+
+                    
 
 @bot.event
 async def on_ready():
