@@ -5,5 +5,5 @@ services:
     restart: unless-stopped
     env_file:
      - CONFIG.env
-    #volumes:
-    # - ./data.db:/data.db
+    volumes:
+     - ./config.json:/config.json
